@@ -1,4 +1,80 @@
-from fastapi import FastAPI,Depends,HTTPException
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from bson import ObjectId
+from database import task_collection
+from model import Task
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+async def task_list(request: Request):
+    tasks = await task_collection.find().to_list(100)
+    for task in tasks:
+        task["_id"] = str(task["_id"])
+    return templates.TemplateResponse("task_list.html", {"request": request, "tasks": tasks})
+
+@app.get("/task/add")
+def task_add_form(request: Request):
+    return templates.TemplateResponse("task_form.html", {"request": request, "task": None})
+
+@app.post("/task/add")
+async def task_add(title: str = Form(...), description: str = Form("")):
+    task = Task(title=title, description=description)
+    await task_collection.insert_one(task.dict())
+    return RedirectResponse("/", status_code=303)
+
+@app.get("/task/edit/{task_id}")
+async def task_edit_form(request: Request, task_id: str):
+    task = await task_collection.find_one({"_id": ObjectId(task_id)})
+    task["_id"] = str(task["_id"])
+    return templates.TemplateResponse("task_form.html", {"request": request, "task": task})
+
+@app.post("/task/edit/{task_id}")
+async def task_edit(task_id: str, title: str = Form(...), description: str = Form("")):
+    await task_collection.update_one({"_id": ObjectId(task_id)}, {"$set": {"title": title, "description": description}})
+    return RedirectResponse("/", status_code=303)
+
+@app.post("/task/delete/{task_id}")
+async def task_delete(task_id: str):
+    await task_collection.delete_one({"_id": ObjectId(task_id)})
+    return RedirectResponse("/", status_code=303)
+
+@app.post("/task/toggle/{task_id}")
+async def task_toggle(task_id: str):
+    task = await task_collection.find_one({"_id": ObjectId(task_id)})
+    await task_collection.update_one({"_id": ObjectId(task_id)}, {"$set": {"completed": not task["completed"]}})
+    return RedirectResponse("/", status_code=303)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''from fastapi import FastAPI,Depends,HTTPException
 from model import Products,ProductCreate,ProductOut,ProductUpdate
 from sqlalchemy.orm import Session
 from database import SessionLocal,engine
@@ -76,5 +152,5 @@ def delete(product_id:int,db:Session=Depends(get_db)):
 
 
 
-
+'''
 

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      padding: 40px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-add {
+      background-color: #007bff;
+      color: white;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+    .btn-edit {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+    }
+    .task {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .task.completed span {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .actions a, .actions form {
+      display: inline-block;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 My Tasks</h1>
+  <a href="/task/add" class="btn btn-add">+ Add Task</a>
+  {% for task in tasks %}
+    <div class="task {% if task.completed %}completed{% endif %}">
+      <form method="post" action="/task/toggle/{{ task['_id'] }}">
+        <input type="checkbox" {% if task.completed %}checked{% endif %} onchange="this.form.submit()">
+        <span>{{ task.title }}</span>
+        
+      </form>
+      <div class="actions">
+        <span style="margin-right: 500px;">{{ task.description }}</span>
+        <a href="/task/edit/{{ task['_id'] }}" class="btn btn-edit">Edit</a>
+        <form method="post" action="/task/delete/{{ task['_id'] }}">
+          <button type="submit" class="btn btn-delete">Delete</button>
+        </form>
+      </div>
+    </div>
+  {% endfor %}
+</body>
+</html>
